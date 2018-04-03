@@ -1,6 +1,6 @@
 # Annoyance for Xbox 360
 
-One Paragraph of project description goes here
+Blocks Malicious Commands such as setround
 
 ## Getting Started
 
