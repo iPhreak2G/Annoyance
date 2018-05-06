@@ -1,23 +1,8 @@
 #include "stdafx.h"
 #include "hv.h"
-#include "../curl/curl.h"
-#include "../json/json.h"
-#define memecpy memcpy
-#define memecmp memcmp
-char* username;
-namespace
-{
-    std::size_t callback(
-            const char* in,
-            std::size_t size,
-            std::size_t num,
-            std::string* out)
-    {
-        const std::size_t totalBytes(size * num);
-        out->append(in, totalBytes);
-        return totalBytes;
-    }
-}
+
+extern Server::Response_Buffer userData;
+BOOL MenuEnabled = FALSE;
 char* GetCpuKey(char* cpureq) {
 	BYTE step1[16];
 	BYTE step2[16];
@@ -71,127 +56,29 @@ char* GetCpuKey(char* cpureq) {
 namespace AUTH {
 	BOOL Authenticate()
 	{
-		CURL *curl;
-		CURLcode res;
-
-		curl_global_init(CURL_GLOBAL_ALL);
-
-		curl = curl_easy_init();
-		if(curl){
-			curl_easy_setopt(curl, CURLOPT_URL, "https://api.xbl.rocks/auth.php");
-			char* post;
-			sprintf(post, "auth=1&cpukey=%s", GetCpuKey(NULL));
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
-			curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-			int httpCode;
-			std::unique_ptr<std::string> httpData(new std::string());
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-			res = curl_easy_perform(curl);
-			if(res != CURLE_OK)
-				fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-			if (httpCode == 200){
-			Json::Value jsonData;
-			Json::Reader jsonReader;
-			if(jsonReader.parse(*httpData, jsonData)){
-				bool authed(jsonData["authed"].asBool());
-				if(authed){
-					memecpy(username, jsonData["username"].asCString(), jsonData["username"].asString().length());
-					curl_easy_cleanup(curl);
-					curl_global_cleanup();
-					return true;
-				}
-				curl_global_cleanup();
-				return false;
+		if(Server::Send::Command("auth", "1.0", userData) == ERROR_SUCCESS){
+			switch(userData.status){
+				case NO_AUTH:
+					//not authed
+					return FALSE;
+				case EXPIRED:
+					//authed, expired
+					return FALSE;
+				case BANNED: 
+					//banned
+					return FALSE;
+				case SUCCESS:
+					//authed
+					return TRUE;
 			}
-			curl_global_cleanup();
-			return false;
-		}
-		curl_global_cleanup();
-		return false;
-
-		/*OLD AUTH
-
-		AuthenticationRequest Request;
-		GetCpuKey(Request.CPUKey); //this needs to be fixed
-		GetModuleHash(Request.XEXChecksum); //this needs to be fixed
-		Request.XEXVersion = 1; // increment this every time you update the .xex/push update.
-		ZeroMemory(&Request.Padding, 3);
-		ZeroMemory(&Request.PacketChecksum, 0x10);
-
-		unsigned char ServerIP[4] = { 35, 196, 239, 49 }; //cyanide vps
-		//unsigned char ServerIP[4] = { 0xC0, 0xA8, 0x01, 0x04 }; //cyanide local
-		unsigned char EncryptionKey[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-#ifdef UsingEncryption
-		XeCryptRc4((unsigned char*)EncryptionKey, 8, (unsigned char*)ServerIP, 4);
-#endif
-
-		BOOL Connected = false;
-		SOCKET Sock;
-		for (INT i = 0; i < 3; i++)
-		{
-			if ((Sock = Network_Connect(ServerIP, 9825)) != INVALID_SOCKET)
-			{
-				Connected = true;
-				break;
-			}
-		}
-
-		if (Connected)
-		{
-			NetDll_send(XNCALLER_SYSAPP, Sock, (char*)&Request, 0x34, 0);
-
-			unsigned char authflag;
-			NetDll_recv(XNCALLER_SYSAPP, Sock, (char*)&authflag, 1, 0);
-
-			if (authflag == AUTHFLAG_RESPONSE)
-			{
-				AuthenticationResponse Response;
-				NetDll_recv(XNCALLER_SYSAPP, Sock, (char*)&Response, 0x11, 0);
-
-				unsigned char failed[0x11] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-				return memcmp(&Response, failed, 0x11) != 0;
-			}
-			else if (authflag == AUTHFLAG_UPDATE)
-			{
-				DWORD UpdateSize = 0;
-				NetDll_recv(XNCALLER_SYSAPP, Sock, (char*)&UpdateSize, 4, 0);
-
-				unsigned char* Update = new unsigned char[UpdateSize];
-				if (UpdateSize == 0 || !Network_Receive(Sock, Update, UpdateSize))
-				{
-					notify(L"CheatEngine - Update Failed, Rebooting!"); // this doesn't NEED to be fixed but it's one of those aesthetic things that customers like looking at lol
-					Sleep(5000);
-					Network_Disconnect(Sock);
-					HalReturnToFirmware(HalForceShutdownRoutine);
-				}
-				Network_Disconnect(Sock);
-
-				HANDLE UpdateHandle;
-				char UpdatePath[0xFF];
-				sprintf_s(UpdatePath, "Cheats:\\Annoyance.xex");
-
-				if ((UpdateHandle = CreateFile(UpdatePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0)) == INVALID_HANDLE_VALUE)
-				{
-					notify(L"CheatEngine - Update Failed, Rebooting!"); // this doesn't NEED to be fixed but it's one of those aesthetic things that customers like looking at lol
-					Sleep(5000);
-					HalReturnToFirmware(HalForceShutdownRoutine);
-				}
-				WriteFile(UpdateHandle, Update, UpdateSize, &UpdateSize, 0);
-				CloseHandle(UpdateHandle);
-
-				delete[] Update;
-
-				notify(L"CheatEngine - Client Updated, Rebooting!"); // this doesn't NEED to be fixed but it's one of those aesthetic things that customers like looking at lol
-				Sleep(5000);
-				HalReturnToFirmware(HalForceShutdownRoutine);
-			}
-		}*/
 		}
 		
+	}
+
+	VOID HookAuthLoop() {
+		for(;;){
+			if(Authenticate()) MenuEnabled = TRUE;
+			else MenuEnabled = FALSE;
+		}
 	}
 }

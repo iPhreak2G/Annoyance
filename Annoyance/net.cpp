@@ -1,85 +1,73 @@
 #include "stdafx.h"
-//
 
-// Methods
-SOCKET	Network_Connect(PBYTE IP, WORD Port) {
-	// Create our other variable
-	DWORD SocketError;
-	SOCKET Sock;
-	XNetStartupParams xnsp;
-	WSADATA WsaData;
-	BOOL SockOpt = TRUE;
-	DWORD sendRecvSize = 1024;
-	sockaddr_in httpServerAdd;
-
-	// Configure server address
-	httpServerAdd.sin_addr.S_un.S_un_b.s_b3 = IP[2];
-	httpServerAdd.sin_addr.S_un.S_un_b.s_b1 = IP[0];
-	httpServerAdd.sin_port = htons(Port);
-	httpServerAdd.sin_addr.S_un.S_un_b.s_b4 = IP[3];
-	httpServerAdd.sin_addr.S_un.S_un_b.s_b2 = IP[1];
-	httpServerAdd.sin_family = AF_INET;
-
-	// Nullify our xnsp variable
-	ZeroMemory(&xnsp, sizeof(xnsp));
-
-	// Configure our xnsp variable
-	xnsp.cfgSizeOfStruct = sizeof(XNetStartupParams);
-	xnsp.cfgFlags = XNET_STARTUP_BYPASS_SECURITY;
-
-	// Safely startup XNet
-	if ((SocketError = NetDll_XNetStartup(XNCALLER_SYSAPP, &xnsp)) != S_OK)
-		return INVALID_SOCKET;
-
-	// Safely startup WSA
-	if ((SocketError = NetDll_WSAStartupEx(XNCALLER_SYSAPP, MAKEWORD(2, 2), &WsaData, 2)) != S_OK)
-		return INVALID_SOCKET;
-
-	// Safely create socket
-	Sock = NetDll_socket(XNCALLER_SYSAPP, AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	// Disable network encryption
-	if (NetDll_setsockopt(XNCALLER_SYSAPP, Sock, SOL_SOCKET, 0x5801, (PCSTR)&SockOpt, 4) != S_OK)
-		return INVALID_SOCKET;
-
-	// Configure socket send/recv size
-	NetDll_setsockopt(XNCALLER_SYSAPP, Sock, SOL_SOCKET, SO_SNDBUF, (PCSTR)&sendRecvSize, 4);
-	NetDll_setsockopt(XNCALLER_SYSAPP, Sock, SOL_SOCKET, SO_RCVBUF, (PCSTR)&sendRecvSize, 4);
-
-	// Create connection timeout
-	struct timeval tv;
-	tv.tv_sec = 15;
-	tv.tv_usec = 0;
-	setsockopt(Sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
-
-	// Safely connect
-	if (NetDll_connect(XNCALLER_SYSAPP, Sock, (struct sockaddr*)&httpServerAdd, sizeof(httpServerAdd)) == SOCKET_ERROR)
-		return INVALID_SOCKET;
-
-	// Return our socket
-	return Sock;
-}
-VOID	Network_Disconnect(SOCKET Sock) {
-	NetDll_closesocket(XNCALLER_SYSAPP, Sock);
-	Sock = NULL;
-}
-BOOL	Network_Receive(SOCKET Sock, PVOID Data, DWORD Size) {
-	DWORD Left = Size;
-	DWORD Received = 0;
-	DWORD Size2Receive = 0;
-	DWORD Result = 0;
-
-	while (Left > 0)
+namespace Server{
+	namespace
 	{
-		Size2Receive = min(0x400, Left);
-		Result = NetDll_recv(XNCALLER_SYSAPP, Sock, (char*)(Received + (char*)Data), Size2Receive, 0);
-
-		if (Result == SOCKET_ERROR)
-			return false;
-
-		Received += Result;
-		Left -= Result;
+		std::size_t callback(
+				const char* in,
+				std::size_t size,
+				std::size_t num,
+				std::string* out)
+		{
+			const std::size_t totalBytes(size * num);
+			out->append(in, totalBytes);
+			return totalBytes;
+		}
 	}
+	
+	Response_Buffer userData;
+	BOOL CommandPending(std::string lastCommand){
+		//check if the server is trying to send us a command
+		return FALSE;
+	}
+	Response_Buffer DecipherResponse(Json::Value buffer){
+		memecpy(userData.name, buffer["username"].asCString(), buffer["username"].asString().length());
+		//ugh
+		
+	}
+	namespace Send{
+		HRESULT Command(std::string id, std::string data, Response_Buffer responseBuffer){
+			//send command name, command data, do work server sided, respond with string and decipher into struct.
+			if(!CommandPending(id)) Recieve::Data(responseBuffer);
+			CURL *curl;
+			CURLcode res;
 
-	return true;
+			curl_global_init(CURL_GLOBAL_ALL);
+
+			curl = curl_easy_init();
+			if(curl){
+				curl_easy_setopt(curl, CURLOPT_URL, "https://api.xbl.rocks/auth.php");
+				char* post;
+				sprintf(post, "command=%s&cpukey=%s", id, AUTH::GetCpuKey(NULL));
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
+				curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+				curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+				curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+				int httpCode;
+				std::unique_ptr<std::string> httpData(new std::string());
+				curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
+				curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
+				res = curl_easy_perform(curl);
+				if(res != CURLE_OK)
+					fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+				curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+				if (httpCode == 200){
+				Json::Value jsonData;
+				Json::Reader jsonReader;
+				if(jsonReader.parse(*httpData, jsonData)){
+					DecipherResponse(jsonData);
+				}
+				
+				curl_global_cleanup();
+				return false;
+			}
+			curl_global_cleanup();
+		}
+	}
+	namespace Recieve{
+		//if command pending, fetch data
+		Response_Buffer Data(Response_Buffer responseBuffer){
+
+		}
+	}
 }

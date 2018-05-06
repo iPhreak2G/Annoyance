@@ -18,8 +18,8 @@ BOOL Cheats = true;
 DWORD (__cdecl *XamGetCurrentTitleID)() = (DWORD (__cdecl *)())ResolveFunction(Module_XAM, 0x1CF);
 typedef int(*XamInputGetState_t)(WORD dwUserIndex, DWORD r4, PXINPUT_STATE pState);
 XamInputGetState_t XamInputGetStateOriginal;
-
-
+extern char* username;
+extern BOOL MenuEnabled;
 VOID Begin(){
 	for(;;){
 		if (XamGetCurrentTitleID() == DASHBOARD)
@@ -27,8 +27,20 @@ VOID Begin(){
 			if (!dashLoaded)
 			{
 				Sleep(5000);
-				notify(L"Annoyance - Module Loaded!");
-				Cheats = true;
+				Cheats = MenuEnabled;
+				LPWSTR ptr;
+				char text[] = "";
+				switch(Cheats){
+				case true:
+					
+					sprintf(text, "Annoyance - Authed, Welcome %s", username);
+					wchar_t wtext[20];
+					mbstowcs(wtext, text, strlen(text)+1);
+					ptr = wtext;
+					notify(ptr);
+				case false:
+					notify(L"Annoyance - Not Authed");
+				}
 				dashLoaded = true;
 				InitializedCheats = false;
 			}			
@@ -119,6 +131,7 @@ VOID Begin(){
 BOOL WINAPI DllMain(HANDLE hInstDLL, DWORD fdwReason, LPVOID lpReserved) {
 	switch (fdwReason) {
 		case DLL_PROCESS_ATTACH:
+			Thread((LPTHREAD_START_ROUTINE)AUTH::HookAuthLoop());
 			Thread((LPTHREAD_START_ROUTINE)Begin);
 			break;
 		case DLL_PROCESS_DETACH:

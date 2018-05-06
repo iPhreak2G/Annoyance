@@ -1,0 +1,43 @@
+﻿Build started 3/21/2018 11:36:34 PM.
+     1>Project "C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Annoyance.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "Debug\Annoyance.unsuccessfulbuild".
+       ClCompile:
+         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Xbox 360 SDK\bin\win32\CL.exe /c /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _XBOX /GF- /Gm /MTd /GS- /Gy- /fp:fast /fp:except- /Zc:wchar_t /Zc:forScope /GR- /openmp- /Yu"StdAfx.h" /Fp"C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Debug\Annoyance.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /TP auth.cpp /callcap /FI"C:\Program Files (x86)\Microsoft Xbox 360 SDK\include\xbox\xbox_intellisense_platform.h"
+         auth.cpp
+     1>c:\users\justin\documents\visual studio 2010\projects\annoyance\json\writer.h(347): warning C4482: nonstandard extension used: enum 'Json::PrecisionType' used in qualified name
+     1>auth.cpp(98): warning C4996: 'Json::Reader::Reader': Use CharReader and CharReaderBuilder instead
+                 c:\users\justin\documents\visual studio 2010\projects\annoyance\json\reader.h(56) : see declaration of 'Json::Reader::Reader'
+     1>c:\users\justin\documents\visual studio 2010\projects\annoyance\annoyance\auth.cpp(196): warning C4715: 'AUTH::Authenticate' : not all control paths return a value
+     1>c:\users\justin\documents\visual studio 2010\projects\annoyance\annoyance\auth.cpp(83): warning C4700: uninitialized local variable 'post' used
+       Link:
+         C:\Program Files (x86)\Microsoft Xbox 360 SDK\bin\win32\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Debug\Annoyance.exe" /INCREMENTAL /NOLOGO xapilibd.lib d3d9d.lib d3dx9d.lib xgraphicsd.lib xboxkrnl.lib xnetd.lib xaudiod2.lib xactd3.lib x3daudiod.lib xmcored.lib xbdm.lib vcompd.lib /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Debug\Annoyance.pdb" /STACK:"262144","262144" /TLBID:1 /IMPLIB:"C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Debug\Annoyance.lib" Debug\Annoyance.obj
+         Debug\auth.obj
+         Debug\detour.obj
+         Debug\hv.obj
+         Debug\net.obj
+         Debug\stdafx.obj
+         Debug\tools.obj /dll /ignore:4089 /ALIGN:128,4096 /XEX:NO
+     1>auth.obj : error LNK2019: unresolved external symbol "public: __cdecl Json::Value::~Value(void)" (??1Value@Json@@QAA@XZ) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_global_cleanup referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_cleanup referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: char const * __cdecl Json::Value::asCString(void)const " (?asCString@Value@Json@@QBAPBDXZ) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl Json::Value::asString(void)const " (?asString@Value@Json@@QBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: bool __cdecl Json::Value::asBool(void)const " (?asBool@Value@Json@@QBA_NXZ) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: class Json::Value & __cdecl Json::Value::operator[](char const *)" (??AValue@Json@@QAAAAV01@PBD@Z) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: bool __cdecl Json::Reader::parse(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class Json::Value &,bool)" (?parse@Reader@Json@@QAA_NABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAVValue@2@_N@Z) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: __cdecl Json::Reader::Reader(void)" (??0Reader@Json@@QAA@XZ) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol "public: __cdecl Json::Value::Value(enum Json::ValueType)" (??0Value@Json@@QAA@W4ValueType@1@@Z) referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_getinfo referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_strerror referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_perform referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_setopt referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_easy_init referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>auth.obj : error LNK2019: unresolved external symbol curl_global_init referenced in function "int __cdecl AUTH::Authenticate(void)" (?Authenticate@AUTH@@YAHXZ)
+     1>C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Debug\Annoyance.exe : fatal error LNK1120: 16 unresolved externals
+     1>Done Building Project "C:\Users\Justin\Documents\Visual Studio 2010\Projects\Annoyance\Annoyance\Annoyance.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:03.50

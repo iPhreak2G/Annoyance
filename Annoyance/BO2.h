@@ -13,6 +13,11 @@ namespace BO2{
 	BYTE fook = {0x65}; // 'e'
 	BYTE realip[4] = {0x00, 0x00, 0x00, 0x00}; //null ip
 	BYTE spoofedip[4] = {0x01,0x03,0x03,0x07}; //fake ip
+	DWORD entry = 0x8242fb70;
+
+	VOID AntiFreezeConsole(){
+
+	}
 
 	VOID Enabled(){ //patch offset
 		memcpy((BYTE*)dump, (DWORD*)BO2ADDY, length); //set cache

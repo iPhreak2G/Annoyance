@@ -74,6 +74,7 @@ typedef enum _PEEK_POKE_TYPE {
 #define HvPokeExpID 0x48565050
 namespace HV {
 	HRESULT InitializeHvPoke();
+	QWORD HvGetFuseLine(BYTE fuseIndex);
 	namespace Peek {
 		BYTE    HvPeekBYTE(QWORD Address);
 		WORD    HvPeekWORD(QWORD Address);

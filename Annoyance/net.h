@@ -1,6 +1,14 @@
-//
+#pragma once
 
-// Methods
-SOCKET	Network_Connect(PBYTE IP, WORD Port);
-VOID	Network_Disconnect(SOCKET Sock);
-BOOL	Network_Receive(SOCKET Sock, PVOID Data, DWORD Size);
+
+namespace Server{
+	typedef struct _Response_Buffer {
+		INT status;
+		INT days;
+		BOOL lifetime;
+		CHAR* name;
+	} Response_Buffer, *PResponse_Buffer;
+	namespace Send{
+		HRESULT Command(std::string id, std::string data[200], Response_Buffer responseBuffer);
+	}
+}
