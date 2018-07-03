@@ -30,7 +30,7 @@ Cyanokit (me)
 
 Please add my discord for assistance or donations.
 ```
-Cyanokit#7623
+Cyanokit#1337
 ```
 
 ## Updates
